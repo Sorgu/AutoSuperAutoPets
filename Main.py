@@ -2,6 +2,10 @@ from ahk import AHK
 import time
 from python_imagesearch.imagesearch import *
 from SuperAutoPetsPack1 import pets, gold
+import logging
+
+logging.basicConfig(level=logging.INFO, filename="log.log", filemode="w",
+                    format="%(asctime)s - %(levelname)s - %(message)s")
 
 
 class Slot:
@@ -33,12 +37,16 @@ ahk = AHK()
 win = ahk.get_active_window()
 title = b"Super Auto Pets (Public testing) by teamwood - Google Chrome"
 if win.title == title:
-    print("pog")
+    logging.info("SAP already selected")
 else:
-    sap_window = ahk.find_window(
-        title=b"Super Auto Pets (Public testing) by teamwood - Google Chrome")  # Super Auto Pets (Public testing) by teamwood - Google Chrome
-    sap_window.activate()
-    print(sap_window.title)
+    try:
+        sap_window = ahk.find_window(
+            title=b"Super Auto Pets (Public testing) by teamwood - Google Chrome")  # Super Auto Pets (Public testing) by teamwood - Google Chrome
+        sap_window.activate()
+        logging.info("Had to switch to SAP window")
+    except Exception as e:
+        logging.critical("SAP window not found")
+        raise e
 
 time.sleep(0.2)
 
@@ -48,10 +56,10 @@ def imageSearch(coords, picture):
     nwx, nwy, sex, sey = coords
     pos = imagesearcharea(picture, x1=nwx, y1=nwy, x2=sex, y2=sey)
     if pos[0] != -1:
-        print("position : ", pos[0], pos[1])
+        logging.info("imageSearch position : ", pos[0], pos[1])
         return True
     else:
-        print("image not found")
+        logging.info("imageSearch image not found")
         return False
 
 
@@ -81,12 +89,12 @@ def buyPetPrep(petSpot):
 # Function to buy a new pet
 def buyPet(className):
     for each in shopPets:
-        print(each.pet)
         if each.pet:
             ahk.mouse_position = (each.middleCoords)
             time.sleep(0.2)
             ahk.mouse_drag(className.middleCoords, speed=10)
             className.pet = each.pet
+            logging.info(f"buyPet bought {each.pet} in {className}")
             time.sleep(1)
             checkStore()
             return
@@ -108,9 +116,9 @@ def goldCheck():
     for each in gold:
         test = imagesearcharea(each["picture"], 321, 133, 424, 194, im=rg, precision=0.9)
         if test[0] != -1:
-            print(each["amount"])
+            logging.info(f"goldCheck :  {each['amount']}")
             return each["amount"]
-    print("GOLD ERROR")
+    logging.warning("goldCheck GOLD ERROR")
     return False
 
 
@@ -119,7 +127,7 @@ def checkDeafeat():
         return
     ahk.mouse_move(960, 540)
     ahk.click()
-    print("Defeat :(")
+    logging.info("Defeat :(")
     time.sleep(0.5)
     ahk.click()
 
@@ -155,7 +163,7 @@ def upgradePets():
             continue
         for every in Pets:
             if each.pet == every.pet:
-                print(each.pet, each.middleCoords, every.pet, every.middleCoords)
+                logging.info(f"upgradePets  {each.pet} {each.middleCoords} {every.pet} {every.middleCoords}")
                 ahk.mouse_position = each.middleCoords
                 ahk.mouse_drag(every.middleCoords, speed=10)
                 checkStore()
@@ -175,7 +183,7 @@ def checkStore():
                 continue
             else:
                 each.pet = every["name"]
-                print("checkStore", each.pet)
+                logging.info(f"checkStore {each.pet}")
                 break
 
 
@@ -202,7 +210,7 @@ def main():
             elif upgradePets():
                 pass
             else:
-                print("no buy or upgrades")
+                logging.info("main no buy or upgrades")
                 roll()
                 checkStore()
             time.sleep(1)
